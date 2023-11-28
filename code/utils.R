@@ -2,10 +2,10 @@
 "%ni%" <- Negate("%in%")
 
 # t-test
-DiffTTest <- function (object, cells.1, cells.2, genes.use = NULL, print.bar = TRUE, 
-          assay.type = "RNA") 
+DiffTTest <- function (object, cells.1, cells.2, genes.use = NULL, print.bar = TRUE,
+          assay.type = "RNA")
 {
-  data.test <- GetAssayData(object = object, assay.type = assay.type, 
+  data.test <- GetAssayData(object = object, assay.type = assay.type,
                             slot = "data")
   genes.use <- SetIfNull(x = genes.use, default = rownames(x = data.test))
   if (print.bar) {
@@ -85,7 +85,7 @@ PlotAndSaveHVG <- function(so, name, display = T) {
     dplyr::rename("variable_gene" = vst.variable) %>%
     ggplot(.) +
     geom_histogram(aes(x = log10(vst.variance.standardized), fill = variable_gene), bins = 50) +
-    pretty_plot() + 
+    pretty_plot() +
     scale_fill_manual(values = jdb_palette("FantasticFox")[c(3,5)]) +
     xlab("log10 mean-standardized variance")
   if (display) {
@@ -99,9 +99,9 @@ PlotAndSavePCAElbow <- function(so, num_pcs, name, display = T) {
   p <- cbind("PC" = seq(1:num_pcs), "stdev" = so@reductions$pca@stdev) %>%
     as.tibble() %>%
     ggplot(., aes(x =  PC, y = stdev)) +
-    geom_point() + 
+    geom_point() +
     pretty_plot() +
-    ylab("standard deviation") + 
+    ylab("standard deviation") +
     xlab("principal components")
   if(display) {
     plot(p)
@@ -115,7 +115,7 @@ PlotAndSaveUMAPClusters <- function(so, clust_col, name, suffix = "", display = 
                            data.frame(so@reductions$umap@cell.embeddings)) %>%
     as.tibble()
   p <- clusters.df %>%
-    ggplot(., aes(x = UMAP_1, y = UMAP_2)) + 
+    ggplot(., aes(x = UMAP_1, y = UMAP_2)) +
     geom_point_rast(aes(color = cluster), size = 0.5, raster.dpi = raster_dpi) +
     scale_color_manual(values = c(jdb_palette("corona"), jdb_palette("corona"), jdb_palette("corona"), jdb_palette("corona"), jdb_palette("corona"))) +
     pretty_plot() +
@@ -138,7 +138,7 @@ PlotAndSavePCsOnUMAP <- function(so, name, display=T, raster_dpi=100) {
                                     value < -3 ~ -3,
                                     T ~ value)) %>%
     dplyr::rename("scores" = value) %>%
-    ggplot(., aes(x = UMAP_1, y = UMAP_2)) + 
+    ggplot(., aes(x = UMAP_1, y = UMAP_2)) +
     geom_point_rast(aes(color = scores), size = 1, raster.dpi = raster_dpi) +
     scale_color_gradientn(colors = jdb_palette("solar_extra")) +
     pretty_plot() +
@@ -160,7 +160,7 @@ PlotAndSaveICsOnUMAP <- function(so, name, display=T, raster_dpi=100) {
                                     value < -3 ~ -3,
                                     T ~ value)) %>%
     dplyr::rename("scores" = value) %>%
-    ggplot(., aes(x = UMAP_1, y = UMAP_2)) + 
+    ggplot(., aes(x = UMAP_1, y = UMAP_2)) +
     geom_point_rast(aes(color = scores), size = 1, raster.dpi = raster_dpi) +
     scale_color_gradientn(colors = jdb_palette("solar_extra")) +
     pretty_plot() +
@@ -187,7 +187,7 @@ PlotAndSaveKnownMarkerGenesOnUMAP <- function(so, keep, marker_genes, name, disp
                                     value < -3 ~ -3,
                                     T ~ value)) %>%
     dplyr::rename("exprs" = value) %>%
-    ggplot(., aes(x = UMAP_1, y = UMAP_2)) + 
+    ggplot(., aes(x = UMAP_1, y = UMAP_2)) +
     geom_point_rast(aes(color = exprs), size = 1, raster.dpi = raster_dpi) +
     scale_color_gradientn(colors = jdb_palette("solar_extra")) +
     pretty_plot() +
@@ -206,20 +206,20 @@ SaveGlobalFeatures <- function(so, name, compress=T) {
     rownames_to_column(., var = "ENSG") %>%
     as.tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
-    fwrite(., 
+    fwrite(.,
            paste0("../features/", name, "/projected_pcaloadings.txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
-  
+
   # Write out ICA across all cells
   so@reductions$ica@feature.loadings.projected %>%
     data.frame() %>%
     rownames_to_column(., var = "ENSG") %>%
     as.tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
-    fwrite(., 
+    fwrite(.,
            paste0("../features/", name, "/projected_icaloadings.txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
-  
+
   # Compress if directed
   if (compress) {
     system(paste0("gzip ../features/", name, "/projected_pcaloadings.txt"))
@@ -228,33 +228,33 @@ SaveGlobalFeatures <- function(so, name, compress=T) {
 }
 
 # Define fast t-test function for sparse matrices
-row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 0.95) 
+row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 0.95)
 {
   force(x)
   force(y)
-  if (is.vector(x)) 
+  if (is.vector(x))
     x <- matrix(x, nrow = 1)
-  if (is.vector(y)) 
+  if (is.vector(y))
     y <- matrix(y, nrow = 1)
-  if (is.data.frame(x) && all(sapply(x, is.numeric))) 
+  if (is.data.frame(x) && all(sapply(x, is.numeric)))
     x <- data.matrix(x)
-  if (is.data.frame(y) && all(sapply(y, is.numeric))) 
+  if (is.data.frame(y) && all(sapply(y, is.numeric)))
     y <- data.matrix(y)
   if (nrow(y) == 1 & nrow(x) > 1) {
     y <- matrix(y, nrow = nrow(x), ncol = ncol(y), byrow = TRUE)
   }
   matrixTests:::assert_equal_nrow(x, y)
-  if (length(alternative) == 1) 
+  if (length(alternative) == 1)
     alternative <- rep(alternative, length.out = nrow(x))
   matrixTests:::assert_character_vec_length(alternative, 1, nrow(x))
   choices <- c("two.sided", "less", "greater")
   alternative <- choices[pmatch(alternative, choices, duplicates.ok = TRUE)]
   matrixTests:::assert_all_in_set(alternative, choices)
-  if (length(mu) == 1) 
+  if (length(mu) == 1)
     mu <- rep(mu, length.out = nrow(x))
   matrixTests:::assert_numeric_vec_length(mu, 1, nrow(x))
   matrixTests:::assert_all_in_closed_interval(mu, -Inf, Inf)
-  if (length(conf.level) == 1) 
+  if (length(conf.level) == 1)
     conf.level <- rep(conf.level, length.out = nrow(x))
   matrixTests:::assert_numeric_vec_length(conf.level, 1, nrow(x))
   matrixTests:::assert_all_in_closed_interval(conf.level, 0, 1)
@@ -278,7 +278,7 @@ row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 
   stderxs <- vxs/nxs
   stderys <- vys/nys
   stders <- stderxs + stderys
-  dfs <- stders * stders/(stderxs * stderxs/(nxs - 1) + stderys * 
+  dfs <- stders * stders/(stderxs * stderxs/(nxs - 1) + stderys *
                             stderys/(nys - 1))
   stders <- sqrt(stders)
   tres <- matrixTests:::do_ttest(mxys, mu, stders, alternative, dfs, conf.level)
@@ -286,18 +286,18 @@ row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 
   matrixTests:::showWarning(w1, "had less than 2 \"x\" observations")
   w2 <- !w1 & nys < 2
   matrixTests:::showWarning(w2, "had less than 2 \"y\" observations")
-  w3 <- stders <= 10 * .Machine$double.eps * pmax(abs(mxs), 
+  w3 <- stders <= 10 * .Machine$double.eps * pmax(abs(mxs),
                                                   abs(mys))
   matrixTests:::showWarning(w3, "were essentially constant")
   tres[w1 | w2 | w3, ] <- NA
   rnames <- rownames(x)
-  if (!is.null(rnames)) 
+  if (!is.null(rnames))
     rnames <- make.unique(rnames)
-  data.frame(obs.x = nxs, obs.y = nys, obs.tot = nxys, mean.x = mxs, 
-             mean.y = mys, mean.diff = mxys, var.x = vxs, var.y = vys, 
-             stderr = stders, df = dfs, statistic = tres[, 1], pvalue = tres[, 
-                                                                             2], conf.low = tres[, 3], conf.high = tres[, 4], 
-             alternative = alternative, mean.null = mu, conf.level = conf.level, 
+  data.frame(obs.x = nxs, obs.y = nys, obs.tot = nxys, mean.x = mxs,
+             mean.y = mys, mean.diff = mxys, var.x = vxs, var.y = vys,
+             stderr = stders, df = dfs, statistic = tres[, 1], pvalue = tres[,
+                                                                             2], conf.low = tres[, 3], conf.high = tres[, 4],
+             alternative = alternative, mean.null = mu, conf.level = conf.level,
              stringsAsFactors = FALSE, row.names = rnames)
 }
 
@@ -397,10 +397,10 @@ WithinClusterFeatures <- function(so, clusters, clus, name, suffix="", compress=
   colnames(missing) <- colnames(markers.mat)
   markers.df <- rbind(markers.mat, missing) %>%
     data.frame()
-  
+
   # Calculate PCs within cluster
   PC_within_cluster <- function(so, clus) {
-    so.clus <- subset(so, idents = clus) 
+    so.clus <- subset(so, idents = clus)
     if(dim(so.clus)[2] > 100) {
       so.clus <- RunPCA(so.clus, npcs = 10)
       so.clus <- ProjectDim(so.clus, do.center = T)
@@ -413,17 +413,17 @@ WithinClusterFeatures <- function(so, clusters, clus, name, suffix="", compress=
   so.clus.pcs[sapply(so.clus.pcs, is.null)] <- NULL
   so.clus.pcs <- so.clus.pcs %>%
     do.call(cbind, .)
-  
+
   # Write out projected gene loadings within clusters
   so.clus.pcs %>%
     data.frame() %>%
     rownames_to_column(., var = "ENSG") %>%
     as.tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
-    fwrite(., 
+    fwrite(.,
            paste0("../features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
-  
+
   # Write out normalized expression within clusters and across all cells
   so.ae <- AverageExpression(so, slot = "scale.data")$RNA
   colnames(so.ae) <- paste0("Cluster", colnames(so.ae))
@@ -433,10 +433,10 @@ WithinClusterFeatures <- function(so, clusters, clus, name, suffix="", compress=
     rownames_to_column(., var = "ENSG") %>%
     as.tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
-    fwrite(., 
+    fwrite(.,
            paste0("../features/", name, "/average_expression", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
-  
+
   # Write differential expression (DE genes) between clusters
   demarkers.df %>%
     rownames_to_column(., var = "ENSG") %>%
@@ -463,7 +463,7 @@ WithinClusterFeatures <- function(so, clusters, clus, name, suffix="", compress=
     fwrite(.,
            paste0("../features/", name, "/diffexprs_tstat_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
-  
+
   # Compress if directed
   if (compress) {
     system(paste0("gzip ../features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"))
@@ -480,20 +480,20 @@ WithinClusterFeatures <- function(so, clusters, clus, name, suffix="", compress=
 PlotAndSaveDEGenesOnUMAP <- function(so, demarkers, name, suffix = "", height = 10, rank_by_tstat = FALSE, display = T, raster_dpi = 100) {
   if (rank_by_tstat) {
     topdegenes <- demarkers %>%
-      group_by(cluster) %>% 
+      group_by(cluster) %>%
       top_n(n = 2, wt = tstat)
     topdegenes <- topdegenes %>%
-      group_by(cluster) %>% 
+      group_by(cluster) %>%
       slice(c(1,2), with_ties = F)
     topdegenes.df <- bind_cols(data.frame(t(so@assays$RNA@scale.data[topdegenes$ENSG,])),
                                data.frame(so@reductions$umap@cell.embeddings)) %>%
       as.tibble()
   } else {
     topdegenes <- demarkers %>%
-      group_by(cluster) %>% 
+      group_by(cluster) %>%
       top_n(n = 2, wt = avg_logFC)
     topdegenes <- topdegenes %>%
-      group_by(cluster) %>% 
+      group_by(cluster) %>%
       slice(c(1,2), with_ties = F)
     topdegenes.df <- bind_cols(data.frame(t(so@assays$RNA@scale.data[topdegenes$ENSG,])),
                                data.frame(so@reductions$umap@cell.embeddings)) %>%
@@ -507,7 +507,7 @@ PlotAndSaveDEGenesOnUMAP <- function(so, demarkers, name, suffix = "", height = 
                                     value < -3 ~ -3,
                                     T ~ value)) %>%
     dplyr::rename("exprs" = value) %>%
-    ggplot(., aes(x = UMAP_1, y = UMAP_2)) + 
+    ggplot(., aes(x = UMAP_1, y = UMAP_2)) +
     geom_point_rast(aes(color = exprs), size = 1, raster.dpi = raster_dpi) +
     scale_color_gradientn(colors = jdb_palette("solar_extra")) +
     pretty_plot() +
@@ -518,3 +518,12 @@ PlotAndSaveDEGenesOnUMAP <- function(so, demarkers, name, suffix = "", height = 
   ggsave(p + theme(legend.position = "none"), filename = paste0("../plots/", name, "/umap_degenes", suffix, ".pdf"), device = cairo_pdf, width = 7, height = height, family = "Helvetica", limitsize = FALSE)
 }
 
+read_sparse_mat <- function(x, rowIdType="ENSG") {
+    mat <- data.frame(fread(x), row.names=1) %>%
+        data.matrix() %>%
+        Matrix(sparse = TRUE)
+    mat <- ConvertToENSGAndProcessMatrix(mat, rowIdType)
+    ### Reorder according to keep so that we can cbind later
+    mat <- mat[match(keep$ENSG, rownames(mat)),]
+    return(mat)
+}

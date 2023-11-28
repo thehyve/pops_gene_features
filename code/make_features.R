@@ -55,11 +55,23 @@ dir.create(paste0("../features/", name))
 
 # Read in data and annotations
 # file <- paste0("../data/", name, "/16populations_RNAcounts.txt")
-# todo: test if inputdata is a dir or a file and then do
-mat <- data.frame(fread(inputData, sep = "\t"))[,-1] %>%
-    data.matrix() %>%
-    Matrix(sparse = TRUE)
-rownames(mat) <- data.frame(fread(inputData), select = 1, skip = 1, sep = "\t")[,1]
+if (dir.exists(inputData)) {
+    filelist = Sys.glob(paste0(inputData, "/*gz"))  # make sure inputData dir only contains expression data files
+    # Read all matrices into a list
+    # assumes rownames to be present as first column in each file
+    datalist <- lapply(filelist, read_sparse_mat(rowIdType = rowIdType))
+
+    # Bind assuming same row order
+    mat <- do.call("cbind", datalist)
+} else {
+    mat <- data.frame(fread(inputData, sep = "\t"))[,-1] %>%
+        data.matrix() %>%
+        Matrix(sparse = TRUE)
+    rownames(mat) <- data.frame(fread(inputData), select = 1, skip = 1, sep = "\t")[,1]
+
+    # Convert to ENSG, drop duplicates, and fill in missing genes
+    mat <- ConvertToENSGAndProcessMatrix(mat, "human_symbol")
+}
 
 # read annotations, if any
 if (inputAnnot != NULL) {
