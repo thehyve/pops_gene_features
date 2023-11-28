@@ -28,15 +28,17 @@ args <- commandArgs(trailingOnly = TRUE)
 # inputData <- as.numeric(args[6L])
 # inputAnnot <- as.numeric(args[7L])
 # isProcessed <- as.numeric(args[8L])
+# rowIdType <- args[9L]
 # TODO: find a way to do something like argparse with list/nullable input so parameters can go to default like annotations that could be provided
-name <- "human_heme_test2"
+name <- "human_heme_test4"
 cores <- 6
-number_pcs <- NULL #35
-vargenes <- NULL #1500
-clus_res <- NULL #0.6
+number_pcs <- 15 #35 # todo: allow "elbow" (default) or an int. if elbow -> choose #pcs based on elbow plot, if not do the int value
+vargenes <- 1500 #3000 # todo: set default 3000
+clus_res <- NULL #0.6 # todo: use "clus3" https://github.com/satijalab/seurat/issues/1565 (default) or float. if clus3 -> let clus3 choose clus_res, if not do the float value
 inputData <- "/home/louwenjjr/Documents/opentargets-bi/pops_gene_features/data/human_heme/16populations_RNAcounts.txt"
 inputAnnot <- NULL
 isProcessed <- TRUE
+rowIdType <- "human_symbol"
 
 # todo: write commands used to log file in code dir
 
@@ -74,14 +76,11 @@ if (dir.exists(inputData)) {
 }
 
 # read annotations, if any
-if (inputAnnot != NULL) {
+if (is.null(inputAnnot) != TRUE) {
     mat.annot <- data.frame(fread(inputAnnot), row.names=1, header=T)
 }
 
 # colnames(mat) <-  gsub("[.]", "-", colnames(mat)) used for human_airway
-
-# Convert to ENSG, drop duplicates, and fill in missing genes
-mat <- ConvertToENSGAndProcessMatrix(mat, "human_symbol")
 
 # Load this in in case we need it later
 keep <- read.table("../resources/gene_annot_jun10.txt", sep = "\t", header = T, stringsAsFactors = F, col.names = c("ENSG", "symbol", "chr", "start", "end", "TSS"))
@@ -89,7 +88,12 @@ keep <- read.table("../resources/gene_annot_jun10.txt", sep = "\t", header = T, 
 #--------------------------------------------------COMPUTE FEATURES-------------------------------------------------#
 
 minFeatures <- 200  # todo: why is this sometimes used but not always?
-so <- CreateSeuratObject(counts = mat, project = name, meta.data = mat.annot)
+if (is.null(inputAnnot) != TRUE) {
+    so <- CreateSeuratObject(counts = mat, project = name, meta.data = mat.annot)
+} else {
+    so <- CreateSeuratObject(counts = mat, project = name)
+}
+
 
 # Clean up
 rm(mat)
@@ -100,6 +104,8 @@ if (isProcessed == FALSE){
                  subset = nFeature_RNA > quantile(so$nFeature_RNA, 0.05) &
                      nFeature_RNA < quantile(so$nFeature_RNA, 0.95))
 }
+
+# assume no batch effect
 so <- NormalizeData(so, normalization.method = "LogNormalize", scale.factor = 1000000)
 so <- ScaleData(so)
 
@@ -109,7 +115,7 @@ so <- FindVariableFeatures(so, nfeatures = vargenes)
 # Plot variable genes with and without labels
 PlotAndSaveHVG(so, name)
 
-# Run PCA todo: see if features param is needed
+# Run PCA todo: see if features parameter is needed
 so <- RunPCA(so, npcs = 15, features = row.names(so))
 # Project PCA to all genes
 so <- ProjectDim(so, do.center = T)
