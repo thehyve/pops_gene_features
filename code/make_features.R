@@ -34,7 +34,7 @@ name <- "human_heme_test4"
 cores <- 6
 number_pcs <- 15 #35 # todo: allow "elbow" (default) or an int. if elbow -> choose #pcs based on elbow plot, if not do the int value
 vargenes <- 1500 #3000 # todo: set default 3000
-clus_res <- NULL #0.6 # todo: use "clus3" https://github.com/satijalab/seurat/issues/1565 (default) or float. if clus3 -> let clus3 choose clus_res, if not do the float value
+clus_res <- 0.6 #0.6 # todo: use "clus3" https://github.com/satijalab/seurat/issues/1565 (default) or float. if clus3 -> let clus3 choose clus_res, if not do the float value
 inputData <- "/home/louwenjjr/Documents/opentargets-bi/pops_gene_features/data/human_heme/16populations_RNAcounts.txt"
 inputAnnot <- NULL
 isProcessed <- TRUE
@@ -140,10 +140,12 @@ so <- RunUMAP(so, dims = 1:number_pcs, min.dist = 0.4, n.epochs = 500,
 # Plot UMAP clusters
 PlotAndSaveUMAPClusters(so, so@meta.data$seurat_clusters, name)
 # Plot known clusters on UMAP (if applicable)
-PlotAndSaveUMAPClusters(so, so@meta.data$CellType, name, suffix = "_pre_def")
+if (is.null(inputAnnot) != TRUE) {
+    PlotAndSaveUMAPClusters(so, so@meta.data$CellType, name, suffix = "_pre_def")
+}
 
 # Plot PCs on UMAP
-PlotAndSavePCsOnUMAP(so, name)
+PlotAndSavePCsOnUMAP(so, name, number_pcs = number_pcs)
 # Plot ICs on UMAP
 PlotAndSaveICsOnUMAP(so, name)
 # Plot known marker genes on UMAP

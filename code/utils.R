@@ -128,8 +128,11 @@ PlotAndSaveUMAPClusters <- function(so, clust_col, name, suffix = "", display = 
 }
 
 # Plot and save PCs on UMAP
-PlotAndSavePCsOnUMAP <- function(so, name, display=T, raster_dpi=100) {
-  pcs.df <- bind_cols(data.frame(so@reductions$pca@cell.embeddings[,1:24]),
+PlotAndSavePCsOnUMAP <- function(so, name, display=T, raster_dpi=100, number_pcs=24) {
+  if (number_pcs > 24) {
+    number_pcs <- 24
+  }
+  pcs.df <- bind_cols(data.frame(so@reductions$pca@cell.embeddings[,1:number_pcs]),
                       data.frame(so@reductions$umap@cell.embeddings)) %>%
     as.tibble()
   p <- pcs.df %>%
