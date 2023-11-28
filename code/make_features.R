@@ -161,14 +161,18 @@ Idents(object=so) <- "seurat_clusters"
 clus <- levels(so@meta.data$seurat_clusters)
 demarkers <- WithinClusterFeatures(so, "seurat_clusters", clus, name)
 # Pre-defined cluster dependent features (if applicable)
-Idents(object=so) <- "CellType"
-clus <- unique(so@meta.data$CellType)
-demarkers_pre_def <- WithinClusterFeatures(so, "CellType", clus, name, suffix = "_pre_def")
+if (is.null(inputAnnot) != TRUE) {
+    Idents(object=so) <- "CellType"
+    clus <- unique(so@meta.data$CellType)
+    demarkers_pre_def <- WithinClusterFeatures(so, "CellType", clus, name, suffix = "_pre_def")
+}
 
 # Plot DE genes on UMAP
 PlotAndSaveDEGenesOnUMAP(so, demarkers, name, height = 30, rank_by_tstat = TRUE)
 # Plot DE genes from pre-defined clusters on UMAP (if applicable)
-PlotAndSaveDEGenesOnUMAP(so, demarkers_pre_def, name, suffix = "_pre_def", height = 30, rank_by_tstat = TRUE)
+if (is.null(inputAnnot) != TRUE) {
+    PlotAndSaveDEGenesOnUMAP(so, demarkers_pre_def, name, suffix = "_pre_def", height = 30, rank_by_tstat = TRUE)
+}
 
 # Save Seurat object
 saveRDS(so, paste0("../data/", name, "/so.rds"))
