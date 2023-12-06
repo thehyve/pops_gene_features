@@ -109,7 +109,7 @@ make_features <- function(name, inputData,
   } else {
     if (endsWith(tolower(inputData), ".rds")) {
       logger$info("Reading RDS file")
-      mat <- get_from_rds(inputData)
+      logger$trace_expr(mat <- get_from_rds(inputData))
     } else if (rowAnnot != "none") {
       # MM format:
       logger$trace_expr(mat <- readMM(inputData) %>%
