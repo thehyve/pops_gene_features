@@ -29,10 +29,10 @@ my.t.test <- function(c){
 
 ### Assumes a sparse dgCMatrix as input
 ### Accepts row_id_type = ENSG, ENSMUSG, human_symbol, mouse_symbol
-ConvertToENSGAndProcessMatrix <- function(mat, row_id_type) {
+ConvertToENSGAndProcessMatrix <- function(mat, row_id_type, keep, conversiondir) {
   ### Convert to ENSG
   if (row_id_type == "mouse_symbol") {
-    sym2ensmusg <- read.table("../resources/symbol2ensmusg.txt", header = F, stringsAsFactors = F, col.names = c("symbol", "ENSMUSG"))
+    sym2ensmusg <- read.table(paste0(conversiondir, "symbol2ensmusg.txt"), header = F, stringsAsFactors = F, col.names = c("symbol", "ENSMUSG"))
     ### Drop rows that don't exist in column
     mat <- mat[row.names(mat) %in% sym2ensmusg$symbol,]
     ### Rename
@@ -42,7 +42,7 @@ ConvertToENSGAndProcessMatrix <- function(mat, row_id_type) {
     row_id_type <- "ENSMUSG"
   }
   if (row_id_type == "human_symbol") {
-    sym2ensg <- read.table("../resources/ensg2symbol.txt", header = F, stringsAsFactors = F, col.names = c("ENSG", "symbol"))
+    sym2ensg <- read.table(paste0(conversiondir, "ensg2symbol.txt"), header = F, stringsAsFactors = F, col.names = c("ENSG", "symbol"))
     ### Drop rows that don't exist in column
     mat <- mat[row.names(mat) %in% sym2ensg$symbol,]
     ### Rename
@@ -52,7 +52,7 @@ ConvertToENSGAndProcessMatrix <- function(mat, row_id_type) {
     row_id_type <- "ENSG"
   }
   if (row_id_type == "ENSMUSG") {
-    ensmusg2ensg <- read.table("../resources/ensmusg2ensg.txt", header = F, stringsAsFactors = F, col.names = c("ENSMUSG", "ENSG"))
+    ensmusg2ensg <- read.table(paste0(conversiondir, "ensmusg2ensg.txt"), header = F, stringsAsFactors = F, col.names = c("ENSMUSG", "ENSG"))
     ### Drop rows that don't exist in column
     mat <- mat[row.names(mat) %in% ensmusg2ensg$ENSMUSG,]
     ### Rename
@@ -63,24 +63,24 @@ ConvertToENSGAndProcessMatrix <- function(mat, row_id_type) {
   }
   ### Drop duplicate rows
   mat <- mat[!duplicated(row.names(mat)),]
-  ### Read in annotations
-  keep <- read.table("../resources/gene_annot_jun10.txt", sep = "\t", header = T, stringsAsFactors = F, col.names = c("ENSG", "symbol", "chr", "start", "end", "TSS"))
   ### Filter to genes of interest
-  rowkeep <- row.names(mat) %in% keep$ENSG
-  mat <- mat[rowkeep,]
-  ### Add missing genes
-  notkeep <- keep %>%
-    dplyr::filter(ENSG %ni% row.names(mat))
-  missing <- sparseMatrix(dims = c(dim(notkeep)[1], length(colnames(mat))), i={}, j={})
-  row.names(missing) <- notkeep$ENSG
-  colnames(missing) <- colnames(mat)
-  mat <- rbind(mat, missing)
+  if (is.data.frame(keep)) {
+    rowkeep <- row.names(mat) %in% keep$ENSG
+    mat <- mat[rowkeep,]
+    ### Add missing genes
+    notkeep <- keep %>%
+      dplyr::filter(ENSG %ni% row.names(mat))
+    missing <- sparseMatrix(dims = c(dim(notkeep)[1], length(colnames(mat))), i={}, j={})
+    row.names(missing) <- notkeep$ENSG
+    colnames(missing) <- colnames(mat)
+    mat <- rbind(mat, missing)
+  }
   ### Return
   return(mat)
 }
 
 # Plot and save variable genes
-PlotAndSaveHVG <- function(so, name, display = T) {
+PlotAndSaveHVG <- function(so, outputdir, name, display = T) {
   p <- so@assays$RNA@meta.data %>%
     dplyr::rename("variable_gene" = vf_vst_counts_variable) %>%
     ggplot(.) +
@@ -91,11 +91,11 @@ PlotAndSaveHVG <- function(so, name, display = T) {
   if (display) {
     plot(p)
   }
-  ggsave(p, filename = paste0("../plots/", name, "/variablegenes.pdf"), device = cairo_pdf, width = 6, height = 4, family = "Helvetica")
+  ggsave(p, filename = paste0(outputdir, "plots/", name, "/variablegenes.pdf"), device = cairo_pdf, width = 6, height = 4, family = "Helvetica")
 }
 
 # Plot and save PCA Elbow
-PlotAndSavePCAElbow <- function(so, num_pcs, name, display = T, hline=-1) {
+PlotAndSavePCAElbow <- function(so, num_pcs, outputdir, name, display = T, hline=-1) {
   p <- cbind("PC" = seq(1:num_pcs), "stdev" = so@reductions$pca@stdev) %>%
     as_tibble() %>%
     ggplot(., aes(x =  PC, y = stdev)) +
@@ -104,10 +104,10 @@ PlotAndSavePCAElbow <- function(so, num_pcs, name, display = T, hline=-1) {
     ylab("standard deviation") +
     xlab("principal components")
   if (hline != -1) {
-    filename <- paste0("../plots/", name, "/maxpcaelbow.pdf")
+    filename <- paste0(outputdir, "plots/", name, "/maxpcaelbow.pdf")
     p <- p + geom_hline(yintercept=hline, colour = "red")
   } else {
-    filename <- paste0("../plots/", name, "/pcaelbow.pdf")
+    filename <- paste0(outputdir, "plots/", name, "/pcaelbow.pdf")
   }
   if(display) {
     plot(p)
@@ -116,7 +116,7 @@ PlotAndSavePCAElbow <- function(so, num_pcs, name, display = T, hline=-1) {
 }
 
 # Plot and save UMAP Clusters
-PlotAndSaveUMAPClusters <- function(so, clust_col, name, suffix = "", display = T, raster_dpi = 300, width = 6, height = 5) {
+PlotAndSaveUMAPClusters <- function(so, clust_col, outputdir, name, suffix = "", display = T, raster_dpi = 300, width = 6, height = 5) {
   clusters.df <- bind_cols(data.frame("cluster" = clust_col),
                            data.frame(so@reductions$umap@cell.embeddings)) %>%
     as_tibble()
@@ -130,11 +130,11 @@ PlotAndSaveUMAPClusters <- function(so, clust_col, name, suffix = "", display = 
   if(display) {
     plot(p)
   }
-  ggsave(p + theme(legend.position = "right"), filename = paste0("../plots/", name, "/umap_clusters", suffix, ".pdf"), device = cairo_pdf, width = width, height = height, family = "Helvetica")
+  ggsave(p + theme(legend.position = "right"), filename = paste0(outputdir, "plots/", name, "/umap_clusters", suffix, ".pdf"), device = cairo_pdf, width = width, height = height, family = "Helvetica")
 }
 
 # Plot and save PCs on UMAP
-PlotAndSavePCsOnUMAP <- function(so, name, display=T, raster_dpi=100, number_pcs=24) {
+PlotAndSavePCsOnUMAP <- function(so, outputdir, name, display=T, raster_dpi=100, number_pcs=24) {
   if (number_pcs > 24) {
     number_pcs <- 24
   }
@@ -155,11 +155,11 @@ PlotAndSavePCsOnUMAP <- function(so, name, display=T, raster_dpi=100, number_pcs
   if (display) {
     plot(p)
   }
-  ggsave(p + theme(legend.position = "none"), filename = paste0("../plots/", name, "/umap_pcs.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
+  ggsave(p + theme(legend.position = "none"), filename = paste0(outputdir, "plots/", name, "/umap_pcs.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
 }
 
 # Plot and save ICs on UMAP
-PlotAndSaveICsOnUMAP <- function(so, name, display=T, raster_dpi=100) {
+PlotAndSaveICsOnUMAP <- function(so, outputdir, name, display=T, raster_dpi=100) {
   ics.df <- bind_cols(data.frame(so@reductions$ica@cell.embeddings[,1:24]),
                       data.frame(so@reductions$umap@cell.embeddings)) %>%
     as_tibble()
@@ -177,11 +177,11 @@ PlotAndSaveICsOnUMAP <- function(so, name, display=T, raster_dpi=100) {
   if (display) {
     plot(p)
   }
-  ggsave(p + theme(legend.position = "none"), filename = paste0("../plots/", name, "/umap_ics.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
+  ggsave(p + theme(legend.position = "none"), filename = paste0(outputdir, "plots/", name, "/umap_ics.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
 }
 
 # Plot and save known marker genes on UMAP
-PlotAndSaveKnownMarkerGenesOnUMAP <- function(so, keep, marker_genes, name, display=T, raster_dpi=100) {
+PlotAndSaveKnownMarkerGenesOnUMAP <- function(so, keep, marker_genes, outputdir, name, display=T, raster_dpi=100) {
   knownmarker_genes <- keep %>%
     dplyr::select(ENSG, symbol) %>%
     dplyr::filter(symbol %in% marker_genes)
@@ -204,11 +204,11 @@ PlotAndSaveKnownMarkerGenesOnUMAP <- function(so, keep, marker_genes, name, disp
   if (display) {
     plot(p)
   }
-  ggsave(p + theme(legend.position = "none"), filename = paste0("../plots/", name, "/umap_knownmarkers.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
+  ggsave(p + theme(legend.position = "none"), filename = paste0(outputdir, "plots/", name, "/umap_knownmarkers.pdf"), device = cairo_pdf, width = 7, height = 10, family = "Helvetica")
 }
 
 # Save global features
-SaveGlobalFeatures <- function(so, keep, name, compress=T, ica_skipped=FALSE) {
+SaveGlobalFeatures <- function(so, keep, outputdir, name, compress=T, ica_skipped=FALSE) {
   # Write out projected gene loadings across all cells
   so@reductions$pca@feature.loadings.projected %>%
     data.frame() %>%
@@ -216,9 +216,10 @@ SaveGlobalFeatures <- function(so, keep, name, compress=T, ica_skipped=FALSE) {
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/projected_pcaloadings.txt"),
+           paste0(outputdir, "features/", name, "/projected_pcaloadings.txt"),
            quote = FALSE, row.names = FALSE, col.names = TRUE, sep = "\t")
-
+  if (compress)
+    system(paste0("gzip -f ", outputdir, "features/", name, "/projected_pcaloadings.txt"))
   if (!ica_skipped) {
     # Write out ICA across all cells
     so@reductions$ica@feature.loadings.projected %>%
@@ -227,19 +228,15 @@ SaveGlobalFeatures <- function(so, keep, name, compress=T, ica_skipped=FALSE) {
       as_tibble() %>%
       arrange(factor(ENSG, levels = keep$ENSG)) %>%
       fwrite(.,
-             paste0("../features/", name, "/projected_icaloadings.txt"),
+             paste0(outputdir, "features/", name, "/projected_icaloadings.txt"),
              quote = FALSE, row.names = FALSE, col.names = TRUE, sep = "\t")
-  }
-  # Compress if directed
-  if (compress) {
-    system(paste0("gzip ../features/", name, "/projected_pcaloadings.txt"))
-    system(paste0("gzip ../features/", name, "/projected_icaloadings.txt"))
+    if (compress)
+      system(paste0("gzip -f ", outputdir, "features/", name, "/projected_icaloadings.txt"))
   }
 }
 
 # Define fast t-test function for sparse matrices
-row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 0.95)
-{
+row_t_welch2 <- function (x, y, alternative = "two.sided", mu = 0, conf.level = 0.95) {
   force(x)
   force(y)
   if (is.vector(x))
@@ -316,13 +313,13 @@ FindAllMarkers2 <- function(so, clusters, type) {
   cluster_levels <- unique(so@meta.data[,clusters])
   cluster_levels <- cluster_levels[!is.na(cluster_levels)]
   lapply(
-    X = 1:length(cluster_levels),
+    X = seq_along(cluster_levels),
     #X = 1:3,
     FUN = function(x) {
       ind1 <- so@meta.data[,clusters] == cluster_levels[x]
       ind2 <- so@meta.data[,clusters] != cluster_levels[x]
-      ind1[is.na(ind1)] = F
-      ind2[is.na(ind2)] = F
+      ind1[is.na(ind1)] <- FALSE
+      ind2[is.na(ind2)] <- FALSE
       set1 <- so@assays$RNA@layers$data[,ind1]
       set2 <- so@assays$RNA@layers$data[,ind2]
       if(type == "sparse") {
@@ -355,17 +352,24 @@ FindAllMarkers2 <- function(so, clusters, type) {
 }
 
 # Big within-cluster features function
-WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", compress=T, type = "dense") {
+WithinClusterFeatures <- function(so, keep, clusters, clus, outputdir, name, suffix="", compress=T, type = "dense") {
 
   # Calculate differentially expressed genes
   #markers <- FindAllMarkers(so, test.use = "t", logfc.threshold = 0)
   markers <- FindAllMarkers2(so, clusters, type)
   # For some reason FindAllMarkers2 makes ENSG dissappear
-  markers <- markers %>%
-    merge(., keep  %>% dplyr::select(ENSG, symbol), by = "ENSG") %>%
-    #dplyr::mutate(p_val = ifelse(p_val < 10^-200, 10^-200, p_val),
-    #              tstat = qt(p_val * 2, dim(so)[2] - 2, lower.tail = F) * sign(avg_logFC)) %>%
-    as_tibble()
+  if (all(c("ENSG", "symbol") %in% colnames(markers)))
+    markers <- markers %>%
+      merge(., keep  %>% dplyr::select(ENSG, symbol), by = "ENSG") %>%
+      #dplyr::mutate(p_val = ifelse(p_val < 10^-200, 10^-200, p_val),
+      #              tstat = qt(p_val * 2, dim(so)[2] - 2, lower.tail = F) * sign(avg_logFC)) %>%
+      as_tibble()
+  else
+    markers <- markers %>%
+      merge(., keep  %>% dplyr::select(ENSG), by = "ENSG") %>%
+      #dplyr::mutate(p_val = ifelse(p_val < 10^-200, 10^-200, p_val),
+      #              tstat = qt(p_val * 2, dim(so)[2] - 2, lower.tail = F) * sign(avg_logFC)) %>%
+      as_tibble()
   #Get upregulated
   demarkers <- markers %>%
     dplyr::filter(p_val_adj < 0.05, avg_logFC > log(2))
@@ -439,7 +443,7 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
 
   # Write out normalized expression within clusters and across all cells
@@ -454,7 +458,7 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/average_expression", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/average_expression", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
   so.ae %>%
     data.frame() %>%
@@ -464,7 +468,7 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/average_expression_rowmeans", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/average_expression_rowmeans", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
 
 
@@ -474,7 +478,7 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/diffexprs_genes_clusters", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/diffexprs_genes_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
 
   # Write differential expression (DE genes) between clusters (downregulated)
@@ -483,7 +487,7 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/diffexprs_down_genes_clusters", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/diffexprs_down_genes_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
 
   # Write differential expression (t-stat) between clusters
@@ -492,23 +496,23 @@ WithinClusterFeatures <- function(so, keep, clusters, clus, name, suffix="", com
     as_tibble() %>%
     arrange(factor(ENSG, levels = keep$ENSG)) %>%
     fwrite(.,
-           paste0("../features/", name, "/diffexprs_tstat_clusters", suffix, ".txt"),
+           paste0(outputdir, "features/", name, "/diffexprs_tstat_clusters", suffix, ".txt"),
            quote = F, row.names = F, col.names = T, sep = "\t")
 
   # Compress if directed
   if (compress) {
-    system(paste0("gzip ../features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"))
-    system(paste0("gzip ../features/", name, "/average_expression", suffix, ".txt"))
-    system(paste0("gzip ../features/", name, "/diffexprs_genes_clusters", suffix, ".txt"))
-    system(paste0("gzip ../features/", name, "/diffexprs_down_genes_clusters", suffix, ".txt"))
-    system(paste0("gzip ../features/", name, "/diffexprs_tstat_clusters", suffix, ".txt"))
+    system(paste0("gzip -f ", outputdir, "features/", name, "/projected_pcaloadings_clusters", suffix, ".txt"))
+    system(paste0("gzip -f ", outputdir, "features/", name, "/average_expression", suffix, ".txt"))
+    system(paste0("gzip -f ", outputdir, "features/", name, "/diffexprs_genes_clusters", suffix, ".txt"))
+    system(paste0("gzip -f ", outputdir, "features/", name, "/diffexprs_down_genes_clusters", suffix, ".txt"))
+    system(paste0("gzip -f ", outputdir, "features/", name, "/diffexprs_tstat_clusters", suffix, ".txt"))
   }
 
   return(demarkers)
 }
 
 # Plot top DE genes on UMAP
-PlotAndSaveDEGenesOnUMAP <- function(so, keep, demarkers, name, suffix = "", height = 10, rank_by_tstat = FALSE, display = T, raster_dpi = 100) {
+PlotAndSaveDEGenesOnUMAP <- function(so, keep, demarkers, outputdir, name, suffix = "", height = 10, rank_by_tstat = FALSE, display = T, raster_dpi = 100) {
   if (rank_by_tstat) {
     topdegenes <- demarkers %>%
       group_by(cluster) %>%
@@ -530,6 +534,7 @@ PlotAndSaveDEGenesOnUMAP <- function(so, keep, demarkers, name, suffix = "", hei
                                data.frame(so@reductions$umap@cell.embeddings)) %>%
       as_tibble()
   }
+
   p <- topdegenes.df %>%
     reshape2::melt(id.vars = c("UMAP_1", "UMAP_2")) %>%
     merge(., keep, by.x = "variable", by.y = "ENSG") %>%
@@ -542,15 +547,18 @@ PlotAndSaveDEGenesOnUMAP <- function(so, keep, demarkers, name, suffix = "", hei
     geom_point_rast(aes(color = exprs), size = 1, raster.dpi = raster_dpi) +
     scale_color_gradientn(colors = jdb_palette("solar_extra")) +
     pretty_plot() +
-    facet_wrap(~symbol, ncol = 4)
-  if (display) {
+  if ("symbol" %in% colnames(topdegenes.df))
+    p <- p + facet_wrap(~symbol, ncol = 4)
+  if (display)
     plot(p)
-  }
-  ggsave(p + theme(legend.position = "none"), filename = paste0("../plots/", name, "/umap_degenes", suffix, ".pdf"), device = cairo_pdf, width = 7, height = height, family = "Helvetica", limitsize = FALSE)
+
+  ggsave(p + theme(legend.position = "none"), filename = paste0(outputdir, "plots/", name, "/umap_degenes", suffix, ".pdf"), device = cairo_pdf, width = 7, height = height, family = "Helvetica", limitsize = FALSE)
 }
 
-read_sparse_mat <- function(x, rowannot, colannot, keep, rowIdType="ENSG") {
-  if (rowannot  == "none") {
+read_sparse_mat <- function(x, rowannot, colannot, keep, converttoensg, conversiondir, rowIdType="ENSG") {
+  if (endsWith(toLower(x), ".rds")) {
+    mat <- get_from_rds(x)
+  } else if (rowannot  == "none") {
     mat <- data.frame(fread(x), row.names=1) %>%
         data.matrix() %>%
         Matrix(sparse = TRUE)
@@ -563,9 +571,10 @@ read_sparse_mat <- function(x, rowannot, colannot, keep, rowIdType="ENSG") {
     rownames(mat) <- rownames(rows)
     colnames(mat) <- rownames(cols)
   }
-  mat <- ConvertToENSGAndProcessMatrix(mat, rowIdType)
+  if (converttoensg)
+    mat <- ConvertToENSGAndProcessMatrix(mat, rowIdType, keep, conversiondir)
   ### Reorder according to keep so that we can cbind later
-  mat[match(keep$ENSG, rownames(mat)),]
+  if (is.data.frame(keep)) mat[match(keep$ENSG, rownames(mat)),] else mat
 }
 
 # Simple logger
@@ -603,12 +612,12 @@ simpleLogger$methods(
       paste(paste(.self$logprefix, "-"), strptime(Sys.time(), "%Y-%m-%d %H:%M:%S"), paste0(level, ":"), message)
     }
   },
-  log = function(msg, lvl) {
+  log = function(msg, lvl, terminate=FALSE) {
     msg_fmt <- .self$format_message(lvl, msg)
     if (lvl %in% .self$to_log) cat(msg_fmt, "\n", file=.self$logfile, append=TRUE)
     if (lvl %in% .self$to_print) {
       if (lvl == "ERROR") {
-        stop(msg)
+        if (terminate) stop(msg) else cat(msg_fmt, "\n")
       } else if (lvl == "WARN") {
         if (lvl %in% .self$to_print) warning(msg)
       } else {
@@ -616,7 +625,7 @@ simpleLogger$methods(
       }
     }
   },
-  error=function(msg) .self$log(msg, "ERROR"),
+  error=function(msg, terminate=TRUE) .self$log(msg, "ERROR", terminate),
   warn=function(msg)  .self$log(msg, "WARN"),
   info=function(msg)  .self$log(msg, "INFO"),
   debug=function(msg) .self$log(msg, "DEBUG"),
@@ -728,6 +737,13 @@ verify_input <- function(args, logger) {
   verify_bool(logger, args$useIntegrationSampleSizeReference, "useIntegrationSampleSizeReference")
   if (args$useIntegrationSampleSizeReference && (length(args$inputData) == 1))
     logger$error("useIntegrationSampleSizeReference can only be used with multiple input files")
+  if (!dir.exists(args$outputDir))
+    logger$error("outputDir does not exist")
+  if (args$toKeep != "")
+    verify_file(logger, args$toKeep, "toKeep")
+  if (args$conversionDir != "")
+    if (!(dir.exists(args$conversionDir)))
+      logger$error("conversionDir: directory not found")
 }
 
 file_ref_to_vec <- function(logger, x, alternative_strings=c()) {
@@ -745,4 +761,16 @@ file_ref_to_vec <- function(logger, x, alternative_strings=c()) {
   } else {
     logger$error(paste0(deparse(substitute(x)), ": File(s) or directory not found."))
   }
+}
+
+get_from_rds <- function(x) {
+  pre_load <- ls()
+  load(x)
+  obj_names <- ls()[!(ls() %in% pre_load)]
+  obj_names <- obj_names[obj_names != "pre_load"]
+  if (length(obj_names) != 1)  # 2 because pre_load is also new
+    logger$error("Cannot handle multiple saved objects currently")
+  mat <- get(obj_names) # make copy
+  rm(list=obj_names)    # Remove the original
+  mat
 }

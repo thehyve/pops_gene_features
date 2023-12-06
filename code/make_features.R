@@ -10,7 +10,7 @@ for (argName in c("inputData", "inputAnnot", "rowAnnot", "colAnnot"))
   if (grepl(",", config[[argName]]))
     config[[argName]] <- strsplit(config[[argName]], ",")[[1]]
 
-config$logger <- simpleLogger(paste0("../logs/", config$name, ".log"),
+config$logger <- simpleLogger(paste0(config$outputDir, "/logs/", config$name, ".log"),
                               loglevel="TRACE",
                               printlevel="INFO")
 
