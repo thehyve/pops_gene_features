@@ -23,7 +23,6 @@ alternate_PreDefinedClusters_names <- c(
   "x"
 )
 
-
 # Looks a bit hacky maybe, but this allows defaults to be defined in 1 place to prevent conflicts
 #  when running interactive (or sourced) vs via command line
 make_features <- function(name, inputData,
@@ -45,7 +44,10 @@ make_features <- function(name, inputData,
                           display           = FALSE,
                           integrationAnchorDims = parser$defaults[[which(parser$args == "--integrationAnchorDims")]],
                           useIntegrationSampleSizeReference = FALSE,
-                          markerGenes       = NULL) {
+                          markerGenes       = NULL,
+                          outputDir         = parser$defaults[[which(parser$args == "--outputDir")]],
+                          geneAnnot         = parser$defaults[[which(parser$args == "--geneAnnot")]],
+                          conversionDir     = parser$defaults[[which(parser$args == "--conversionDir")]]) {
 
   inputData <- file_ref_to_vec(logger, inputData)
   rowAnnot <- file_ref_to_vec(logger, rowAnnot, alternative_strings = c("none", "header"))
@@ -57,9 +59,15 @@ make_features <- function(name, inputData,
                       paste0(lapply(seq_along(fun_args), function(y, n, i) { paste(n[[i]], "=", as.character(y[[i]])) }, y=fun_args, n=names(fun_args)), collapse="\n  ")
   ))
   verify_input(fun_args, logger = logger)
+
   if (numberPcs != "elbow")
     numberPcs <- as.numeric(numberPcs)
   compress <- !dontCompress
+  if (!(endsWith(outputDir, "/")))
+    outputDir <- paste0(outputDir, "/")
+  convertToEnsg <- conversionDir != ""
+  if ((conversionDir != "") && !endsWith(conversionDir, "/"))
+    conversionDir <- paste0(conversionDir, "/")
 
   # Set up parallelization
   # Remember to use htop to delete forgotten forks
@@ -71,13 +79,17 @@ make_features <- function(name, inputData,
   on.exit(plan(oplan), add=TRUE)
 
   # Setup
-  dir.create(paste0("../plots/", name), showWarnings = FALSE)
-  dir.create(paste0("../features/", name), showWarnings = FALSE)
-  dir.create(paste0("../data/", name), showWarnings = FALSE)
+  dir.create(paste0(outputDir, "plots/", name), recursive = TRUE, showWarnings = FALSE)
+  dir.create(paste0(outputDir, "features/", name), recursive = TRUE, showWarnings = FALSE)
+  dir.create(paste0(outputDir, "data/", name), recursive = TRUE, showWarnings = FALSE)
 
   #------------------------------------------------LOAD AND FORMAT DATA-----------------------------------------------#
+  if (geneAnnot != "") {
+    logger$trace_expr(keep <- read.table(geneAnnot, sep = "\t", header = T, stringsAsFactors = F, col.names = c("ENSG", "symbol", "chr", "start", "end", "TSS")))
+  } else {
+    keep <- NULL  # Added later
+  }
 
-  logger$trace_expr(keep <- read.table("../resources/gene_annot_jun10.txt", sep = "\t", header = T, stringsAsFactors = F, col.names = c("ENSG", "symbol", "chr", "start", "end", "TSS")))
   # Read in data and annotations
   logger$info("Loading data and annotations")
   if (length(inputData) > 1) {# Read all matrices into a list
@@ -89,25 +101,28 @@ make_features <- function(name, inputData,
 
     logger$trace_expr(datalist <- lapply(seq_along(inputData),
                                          function(i)
-                                           read_sparse_mat(inputData[i], keep = keep, rowannot = rowAnnot[i], colannot = colAnnot[i], rowIdType = rowIdType))
+                                           read_sparse_mat(inputData[i], keep = keep, rowannot = rowAnnot[i], colannot = colAnnot[i], converttoensg = convertToEnsg, conversiondir = conversionDir, rowIdType = rowIdType))
     )
     # Bind assuming same row order
     logger$trace_expr(mat <- do.call("cbind", datalist))
     colnames(mat) <- make.names(colnames(mat), unique=T)
   } else {
-    if (rowAnnot != "none") {
+    if (endsWith(tolower(inputData), ".rds")) {
+      logger$info("Reading RDS file")
+      mat <- get_from_rds(inputData)
+    } else if (rowAnnot != "none") {
       # MM format:
       logger$trace_expr(mat <- readMM(inputData) %>%
-                          data.matrix() %>%
-                          Matrix(sparse = TRUE))
+        data.matrix() %>%
+        Matrix(sparse = TRUE))
       logger$trace_expr(col.annot <- data.frame(fread(colAnnot, header=F), row.names=1))
       logger$trace_expr(row.annot <- data.frame(fread(rowAnnot, header=F), row.names=1))
       colnames(mat) <- rownames(col.annot)
       rownames(mat) <- rownames(row.annot)
     } else {
       logger$trace_expr(mat <- data.frame(fread(inputData, sep = "\t"))[,-1] %>%
-                          data.matrix() %>%
-                          Matrix(sparse = TRUE))
+        data.matrix() %>%
+        Matrix(sparse = TRUE))
       logger$trace_expr(rownames(mat) <- data.frame(fread(inputData), select = 1, skip = 1, sep = "\t")[,1])
     }
   }
@@ -136,7 +151,8 @@ make_features <- function(name, inputData,
   }
 
   # Convert to ENSG, drop duplicates, and fill in missing genes
-  logger$trace_expr(mat <- ConvertToENSGAndProcessMatrix(mat, row_id_type = rowIdType))
+  if (convertToEnsg)
+    logger$trace_expr(mat <- ConvertToENSGAndProcessMatrix(mat, row_id_type = rowIdType, keep=keep, conversiondir = conversionDir))
 
   #--------------------------------------------------COMPUTE FEATURES-------------------------------------------------#
   logger$info("Converting to Seurat object")
@@ -169,8 +185,8 @@ make_features <- function(name, inputData,
   if (!isProcessed){
     logger$info("Running QC")
     logger$trace_expr(so <- subset(so,
-                 subset = nFeature_RNA > quantile(so$nFeature_RNA, 0.05) &
-                   nFeature_RNA < quantile(so$nFeature_RNA, 0.95)))
+                                   subset = nFeature_RNA > quantile(so$nFeature_RNA, 0.05) &
+                                     nFeature_RNA < quantile(so$nFeature_RNA, 0.95)))
   }
 
   if (length(inputData) > 1) {
@@ -199,18 +215,17 @@ make_features <- function(name, inputData,
 
     # This is never normalized, only scaled
   } else {
-    # assume no batch effect
-    logger$info("Normalizing and scaling data")
+    logger$info("Normalizing data")
     logger$trace_expr(so <- NormalizeData(so, normalization.method = "LogNormalize", scale.factor = 1000000))
   }
-
+  logger$info("Scaling data")
   logger$trace_expr(so <- ScaleData(so))
 
   if (length(inputData) == 1) {
     # Identify variable genes
     logger$info("Identifying variable genes")
     logger$trace_expr(so <- FindVariableFeatures(so, nfeatures = varGenes))
-    logger$trace_expr(PlotAndSaveHVG(so, name, display=display))
+    logger$trace_expr(PlotAndSaveHVG(so, outputDir, name, display=display))
   } else {
     VariableFeatures(so) <- so.integrated@assays$integrated@var.features
   }
@@ -224,7 +239,7 @@ make_features <- function(name, inputData,
     logger$trace_expr(numberPcs <- find_curve_elbow(cbind(1:max_pcs, so2@reductions$pca@stdev)))
     logger$info(paste("Number of PCs to use:", numberPcs))
     logger$trace_expr(min_dev <- so2@reductions$pca@stdev[numberPcs])
-    logger$trace_expr(PlotAndSavePCAElbow(so2, max_pcs, name, hline=min_dev, display=display))
+    logger$trace_expr(PlotAndSavePCAElbow(so2, max_pcs, outputDir, name, hline=min_dev, display=display))
     # Redo PCA with chosen number of PCs:
   }
   logger$info("Running PCA")
@@ -233,7 +248,7 @@ make_features <- function(name, inputData,
   # Project PCA to all genes
   logger$trace_expr(so <- ProjectDim(so, do.center = TRUE))
   # Plot Elbow
-  logger$trace_expr(PlotAndSavePCAElbow(so, numberPcs, name, display=display))
+  logger$trace_expr(PlotAndSavePCAElbow(so, numberPcs, outputDir, name, display=display))
 
 
   # Run ICA
@@ -276,8 +291,9 @@ make_features <- function(name, inputData,
     logger$trace_expr(p <- clustree(so2, prefix="RNA_snn_res."))
     # add a red bar at chosen clusRes
     p <- p + geom_hline(yintercept = which(res_to_try[length(res_to_try):1] == clusRes)-1, colour="red")  # Add bar for chosen RES
-    ggsave(p, filename = paste0("../plots/", name, "/clustree.pdf"), device = cairo_pdf, width = 6, height = 4, family = "Helvetica")
+    ggsave(p, filename = paste0(outputDir, "plots/", name, "/clustree.pdf"), device = cairo_pdf, width = 6, height = 4, family = "Helvetica")
     rm (so2)
+    logger$info("Continuing base clustering")
   }
 
   logger$trace_expr(so <- FindClusters(so, resolution = clusRes, n.start = 100))
@@ -285,28 +301,32 @@ make_features <- function(name, inputData,
   # UMAP dim reduction
   logger$info("Running UMAP dimension reduction")
   logger$trace_expr(so <- RunUMAP(so, reduction.key = "UMAP_",dims = 1:numberPcs, min.dist = 0.4, n.epochs = 500,
-                n.neighbors = 10, learning.rate = 0.1, spread = 2))
-
+                                  n.neighbors = 10, learning.rate = 0.1, spread = 2))
   # Plot UMAP clusters
-  logger$trace_expr(PlotAndSaveUMAPClusters(so, so@meta.data$seurat_clusters, name, display=display))
+  logger$trace_expr(PlotAndSaveUMAPClusters(so, so@meta.data$seurat_clusters, outputDir, name, display=display))
+
   # Plot known clusters on UMAP (if applicable)
   if (all(inputAnnot != "none")) {
     logger$trace_expr(
-      PlotAndSaveUMAPClusters(so, so@meta.data$PreDefinedClusters, name, display=display, suffix = "_pre_def")
+      PlotAndSaveUMAPClusters(so, so@meta.data$PreDefinedClusters, outputDir, name, display=display, suffix = "_pre_def")
     )
   }
 
+  # Hack to keep all features
+  if (geneAnnot == "")
+    logger$trace_expr(keep <- data.frame(ENSG=rownames(so@assays$RNA)))
+
   # Plot PCs on UMAP
-  logger$trace_expr(PlotAndSavePCsOnUMAP(so, name, number_pcs = numberPcs, display=display))
+  logger$trace_expr(PlotAndSavePCsOnUMAP(so, outputDir, name, number_pcs = numberPcs, display=display))
   # Plot ICs on UMAP
-  if (!ica_skipped) logger$trace_expr(PlotAndSaveICsOnUMAP(so, name, display=display))
+  if (!ica_skipped) logger$trace_expr(PlotAndSaveICsOnUMAP(so, outputDir, name, display=display))
   # Plot known marker genes on UMAP
   if (length(markerGenes[markerGenes != ""]) > 0)
-    logger$trace_expr(PlotAndSaveKnownMarkerGenesOnUMAP(so, keep, markerGenes, name, display=display))
+    logger$trace_expr(PlotAndSaveKnownMarkerGenesOnUMAP(so, keep, markerGenes, outputDir, name, display=display))
 
   # Save global features
   logger$info("Saving features")
-  logger$trace_expr(SaveGlobalFeatures(so, keep, name, compress=compress, ica_skipped))
+  logger$trace_expr(SaveGlobalFeatures(so, keep, outputDir, name, compress=compress, ica_skipped))
 
   if (length(inputData) > 1) {
     rownames(so@assays$RNA@layers$scale.data) <- so.integrated@assays$integrated@var.features
@@ -319,24 +339,24 @@ make_features <- function(name, inputData,
   # Seurat clusters
   Idents(object=so) <- "seurat_clusters"
   clus <- levels(so@meta.data$seurat_clusters)
-  logger$trace_expr(demarkers <- WithinClusterFeatures(so, keep, clusters="seurat_clusters", clus=clus, name=name, compress=compress))
+  logger$trace_expr(demarkers <- WithinClusterFeatures(so, keep, clusters="seurat_clusters", clus=clus, outputdir=outputDir, name=name, compress=compress))
   # Pre-defined cluster dependent features (if applicable)
   if (inputAnnot != "none") {
     Idents(object=so) <- "PreDefinedClusters"
     clus <- unique(so@meta.data$PreDefinedClusters)
-    logger$trace_expr(demarkers_pre_def <- WithinClusterFeatures(so, keep, clusters="PreDefinedClusters", clus=clus, name=name, suffix = "_pre_def", compress=compress))
+    logger$trace_expr(demarkers_pre_def <- WithinClusterFeatures(so, keep, clusters="PreDefinedClusters", clus=clus, outputdir=outputDir, name=name, suffix = "_pre_def", compress=compress))
   }
 
   logger$info("Plotting dependent features")
   # Plot DE genes on UMAP
-  logger$trace_expr(PlotAndSaveDEGenesOnUMAP(so, keep, demarkers, name, display=display, height = DEGenesPlotHeight, rank_by_tstat = TRUE))
+  logger$trace_expr(PlotAndSaveDEGenesOnUMAP(so, keep, demarkers, outputDir, name, display=display, height = DEGenesPlotHeight, rank_by_tstat = TRUE))
   # Plot DE genes from pre-defined clusters on UMAP (if applicable)
   if (inputAnnot != "none") {
-    logger$trace_expr(PlotAndSaveDEGenesOnUMAP(so, keep, demarkers_pre_def, name, display=display, suffix = "_pre_def", height = DEGenesPlotHeight, rank_by_tstat = TRUE))
+    logger$trace_expr(PlotAndSaveDEGenesOnUMAP(so, keep, demarkers_pre_def, outputDir, name, display=display, suffix = "_pre_def", height = DEGenesPlotHeight, rank_by_tstat = TRUE))
   }
 
   # Save Seurat object
   logger$info("Saving Seurat object")
-  logger$trace_expr(saveRDS(so, paste0("../data/", name, "/so.rds")))
+  logger$trace_expr(saveRDS(so, paste0(outputDir, "data/", name, "/so.rds")))
   logger$info("Finished")
 }

@@ -32,7 +32,7 @@ if (INTERACTIVE_TEST) {
 
 if (!(dir.exists("../logs")))
   dir.create("../logs")
-logger <- simpleLogger(paste0("../logs/", config$name, ".log"),
+logger <- simpleLogger(paste0(config$outputDir, "/logs/", config$name, ".log"),
                        loglevel="TRACE",
                        printlevel="INFO")
 
@@ -81,6 +81,10 @@ if (INTERACTIVE_TEST) {
   for (runName in names(fun_args_list)) {
     logger$change_prefix(runName)
     logger$info(paste0("Starting generation of features for ", runName))
-    do.call(make_features, fun_args_list[[runName]])
+    tryCatch(
+      {do.call(make_features, fun_args_list[[runName]])},
+      error = function(cond) logger$error(paste0("FAILED: ", conditionMessage(cond)), terminate=FALSE)
+    )
+
   }
 }

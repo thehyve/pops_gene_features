@@ -20,3 +20,6 @@ parser <- add_argument(parser, "--display", help="Display plots as they are gene
 parser <- add_argument(parser, "--integrationAnchorDims", help="Number of dimensions to use for integration anchors of multiple input files", type="numeric", default=30)
 parser <- add_argument(parser, "--useIntegrationSampleSizeReference", help="Use sample size as reference data when finding integration anchors", flag=TRUE)
 parser <- add_argument(parser, "--markerGenes", help="Known marker genes to compare to, comma separated", type="character", default="")
+parser <- add_argument(parser, "--outputDir", help="Base folder for output (will make outputDir/features outputDir/data, etc", type="character", default="../")
+parser <- add_argument(parser, "--geneAnnot", help="File with gene annotation (and genes to keep), if no file is provided all genes/rows will be kept", type="character", default="")
+parser <- add_argument(parser, "--conversionDir", help="directory with files used for converting to ENSG, leave empty to skip conversion", type="character", default="")
