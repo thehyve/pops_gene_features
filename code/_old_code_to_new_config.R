@@ -1,3 +1,4 @@
+library(rjson)
 source("make_features_argparser.R")
 
 extract <- function(l, indicator, default) {
@@ -7,9 +8,12 @@ extract <- function(l, indicator, default) {
     default
   }
 }
-
-# Currently only does marker gene
-newConfig <- list()
+# New defaults
+newConfig <- list(overrideDefaults=list(
+  outputDir="../",
+  geneAnnot="../resources/gene_annot_jun10.txt",
+  conversionDir="../resources"
+))
 to_skip <- c(
   "_old_code_to_new_config.R",
   "utils.R",
@@ -46,7 +50,6 @@ for (file in dir()) {
       useIntegrationSampleSizeReference <- (useIntegrationSampleSizeReference || grepl(",reference=reference_dataset", lineTrim))
     }
     newConfig[[name]] <- list(
-      name=name,
       inputData="TODO",
       numberPcs=as.numeric(numberPcs),
       varGenes=as.numeric(varGenes),

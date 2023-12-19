@@ -1,6 +1,10 @@
 {
+    "overrideDefaults":{
+        "outputDir":"../",
+        "geneAnnot":"../resources/gene_annot_jun10.txt",
+        "conversionDir":"../resources"
+    },
     "human_airway":{
-        "name":"human_airway",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -37,7 +41,6 @@
         ]
     },
     "human_bladder":{
-        "name":"human_bladder",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -55,7 +58,6 @@
         "markerGenes":null
     },
     "human_bonemarrow":{
-        "name":"human_bonemarrow",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -73,7 +75,6 @@
         "markerGenes":null
     },
     "human_brain_cerebellarhem":{
-        "name":"human_brain_cerebellarhem",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -91,7 +92,6 @@
         "markerGenes":null
     },
     "human_brain_frontalcortex":{
-        "name":"human_brain_frontalcortex",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -109,7 +109,6 @@
         "markerGenes":null
     },
     "human_brain_visualcortex":{
-        "name":"human_brain_visualcortex",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -127,7 +126,6 @@
         "markerGenes":null
     },
     "human_brain2":{
-        "name":"human_brain2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -157,7 +155,6 @@
         ]
     },
     "human_brain3_adult":{
-        "name":"human_brain3_adult",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -191,7 +188,6 @@
         ]
     },
     "human_brain3_prenatal":{
-        "name":"human_brain3_prenatal",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -225,7 +221,6 @@
         ]
     },
     "human_brain4":{
-        "name":"human_brain4",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -274,7 +269,6 @@
         ]
     },
     "human_colon":{
-        "name":"human_colon",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -309,7 +303,6 @@
         ]
     },
     "human_colon2":{
-        "name":"human_colon2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -349,7 +342,6 @@
         ]
     },
     "human_coloncancer":{
-        "name":"human_coloncancer",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -395,7 +387,6 @@
         ]
     },
     "human_csf":{
-        "name":"human_csf",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -433,7 +424,6 @@
         ]
     },
     "human_embryo":{
-        "name":"human_embryo",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -477,7 +467,6 @@
         ]
     },
     "human_eye":{
-        "name":"human_eye",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -513,7 +502,6 @@
         ]
     },
     "human_fetalblood":{
-        "name":"human_fetalblood",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -564,7 +552,6 @@
         ]
     },
     "human_gut":{
-        "name":"human_gut",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -582,7 +569,6 @@
         "markerGenes":null
     },
     "human_gut_epi":{
-        "name":"human_gut_epi",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -600,7 +586,6 @@
         "markerGenes":null
     },
     "human_gut_fib":{
-        "name":"human_gut_fib",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -618,7 +603,6 @@
         "markerGenes":null
     },
     "human_heme":{
-        "name":"human_heme",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -636,7 +620,6 @@
         "markerGenes":null
     },
     "human_hippocampus":{
-        "name":"human_hippocampus",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -673,7 +656,6 @@
         ]
     },
     "human_ileum":{
-        "name":"human_ileum",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -716,7 +698,6 @@
         ]
     },
     "human_immune":{
-        "name":"human_immune",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -734,7 +715,6 @@
         "markerGenes":null
     },
     "human_intestine":{
-        "name":"human_intestine",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -786,7 +766,6 @@
         ]
     },
     "human_kidney":{
-        "name":"human_kidney",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -804,7 +783,6 @@
         "markerGenes":null
     },
     "human_kidney2":{
-        "name":"human_kidney2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -845,7 +823,6 @@
         ]
     },
     "human_kidney3":{
-        "name":"human_kidney3",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -887,7 +864,6 @@
         ]
     },
     "human_liver":{
-        "name":"human_liver",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -924,7 +900,6 @@
         ]
     },
     "human_lung":{
-        "name":"human_lung",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -942,7 +917,6 @@
         "markerGenes":null
     },
     "human_lymphnodes":{
-        "name":"human_lymphnodes",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -985,7 +959,6 @@
         ]
     },
     "human_monocytes":{
-        "name":"human_monocytes",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1029,7 +1002,6 @@
         ]
     },
     "human_multiple":{
-        "name":"human_multiple",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1047,7 +1019,6 @@
         "markerGenes":null
     },
     "human_muscle":{
-        "name":"human_muscle",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1089,7 +1060,6 @@
         ]
     },
     "human_nk":{
-        "name":"human_nk",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1129,7 +1099,6 @@
         ]
     },
     "human_pancreas":{
-        "name":"human_pancreas",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1159,7 +1128,6 @@
         ]
     },
     "human_pancreasductal":{
-        "name":"human_pancreasductal",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1188,7 +1156,6 @@
         ]
     },
     "human_pbmc":{
-        "name":"human_pbmc",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1217,7 +1184,6 @@
         ]
     },
     "human_placenta":{
-        "name":"human_placenta",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1251,7 +1217,6 @@
         ]
     },
     "human_prostate":{
-        "name":"human_prostate",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1269,7 +1234,6 @@
         "markerGenes":null
     },
     "human_retina":{
-        "name":"human_retina",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1306,7 +1270,6 @@
         ]
     },
     "human_retina2":{
-        "name":"human_retina2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1347,7 +1310,6 @@
         ]
     },
     "human_synovialfibroblast":{
-        "name":"human_synovialfibroblast",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1378,7 +1340,6 @@
         ]
     },
     "human_tcell":{
-        "name":"human_tcell",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1422,7 +1383,6 @@
         ]
     },
     "human_testis":{
-        "name":"human_testis",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1480,7 +1440,6 @@
         ]
     },
     "human_thymus":{
-        "name":"human_thymus",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1498,7 +1457,6 @@
         "markerGenes":null
     },
     "install":{
-        "name":"install",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1516,7 +1474,6 @@
         "markerGenes":null
     },
     "mouse_adipocyte":{
-        "name":"mouse_adipocyte",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1552,7 +1509,6 @@
         ]
     },
     "mouse_airway":{
-        "name":"mouse_airway",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1587,7 +1543,6 @@
         ]
     },
     "mouse_aorta":{
-        "name":"mouse_aorta",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1616,7 +1571,6 @@
         ]
     },
     "mouse_brain":{
-        "name":"mouse_brain",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1634,7 +1588,6 @@
         "markerGenes":null
     },
     "mouse_brain2":{
-        "name":"mouse_brain2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1676,7 +1629,6 @@
         ]
     },
     "mouse_brain4_bnst":{
-        "name":"mouse_brain4_bnst",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1725,7 +1677,6 @@
         ]
     },
     "mouse_brain4_neurons":{
-        "name":"mouse_brain4_neurons",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1774,7 +1725,6 @@
         ]
     },
     "mouse_development":{
-        "name":"mouse_development",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1808,7 +1758,6 @@
         ]
     },
     "mouse_digestive_adult":{
-        "name":"mouse_digestive_adult",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1838,7 +1787,6 @@
         ]
     },
     "mouse_digestive_fetal":{
-        "name":"mouse_digestive_fetal",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1868,7 +1816,6 @@
         ]
     },
     "mouse_endothelium":{
-        "name":"mouse_endothelium",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1912,7 +1859,6 @@
         ]
     },
     "mouse_epithelium":{
-        "name":"mouse_epithelium",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -1951,7 +1897,6 @@
         ]
     },
     "mouse_gastrulation":{
-        "name":"mouse_gastrulation",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2003,7 +1948,6 @@
         ]
     },
     "mouse_gutendoderm":{
-        "name":"mouse_gutendoderm",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2042,7 +1986,6 @@
         ]
     },
     "mouse_hairfollicle":{
-        "name":"mouse_hairfollicle",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2078,7 +2021,6 @@
         ]
     },
     "mouse_heart_control":{
-        "name":"mouse_heart_control",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2108,7 +2050,6 @@
         ]
     },
     "mouse_heart_ko":{
-        "name":"mouse_heart_ko",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2138,7 +2079,6 @@
         ]
     },
     "mouse_hemogenicendothelium":{
-        "name":"mouse_hemogenicendothelium",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2173,7 +2113,6 @@
         ]
     },
     "mouse_immune":{
-        "name":"mouse_immune",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2191,7 +2130,6 @@
         "markerGenes":null
     },
     "mouse_islets":{
-        "name":"mouse_islets",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2209,7 +2147,6 @@
         "markerGenes":null
     },
     "mouse_kidney":{
-        "name":"mouse_kidney",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2248,7 +2185,6 @@
         ]
     },
     "mouse_lung":{
-        "name":"mouse_lung",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2277,7 +2213,6 @@
         ]
     },
     "mouse_microglia":{
-        "name":"mouse_microglia",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2312,7 +2247,6 @@
         ]
     },
     "mouse_multiple":{
-        "name":"mouse_multiple",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2330,7 +2264,6 @@
         "markerGenes":null
     },
     "mouse_multiple2_bulk":{
-        "name":"mouse_multiple2_bulk",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2348,7 +2281,6 @@
         "markerGenes":null
     },
     "mouse_multiple2_droplet":{
-        "name":"mouse_multiple2_droplet",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2366,7 +2298,6 @@
         "markerGenes":null
     },
     "mouse_multiple2_facs":{
-        "name":"mouse_multiple2_facs",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2384,7 +2315,6 @@
         "markerGenes":null
     },
     "mouse_muscle":{
-        "name":"mouse_muscle",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2421,7 +2351,6 @@
         ]
     },
     "mouse_muscle2":{
-        "name":"mouse_muscle2",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2455,7 +2384,6 @@
         ]
     },
     "mouse_nerve":{
-        "name":"mouse_nerve",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2493,7 +2421,6 @@
         ]
     },
     "mouse_thymus":{
-        "name":"mouse_thymus",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,
@@ -2528,7 +2455,6 @@
         ]
     },
     "mouse_vagina":{
-        "name":"mouse_vagina",
         "inputData":"TODO",
         "numberPcs":        20,
         "varGenes":        3000,

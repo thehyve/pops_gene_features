@@ -3,7 +3,10 @@
     "cores": 6, 
     "plotClustree": false,
     "dontCompress": true,
-    "DEGenesPlotHeight": 15
+    "DEGenesPlotHeight": 15,
+    "outputDir": "../",
+    "geneAnnot": "../resources/gene_annot_jun10.txt",
+    "conversionDir": "../resources"
   },
   "human_kidney_test": {
     "inputData": ["../data/GSM4145204_kidney1_matrix.mtx.gz", "../data/GSM4145205_kidney2_matrix.mtx.gz", "../data/GSM4145206_kidney3_matrix.mtx.gz"],

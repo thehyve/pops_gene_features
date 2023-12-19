@@ -3,9 +3,15 @@ suppressPackageStartupMessages(library(rjson, verbose=FALSE))
 source("make_features_argparser.R")
 source("make_features_fun.R")
 
+# For interactive_testing:
+#  Will setup the environment for the indicated name (logging to interactive.log)
+INTERACTIVE_TEST <- FALSE
+interactive_name <- "human_kidney_test"
+
 batch_parser <- arg_parser("Generate and format batch of PoPS feature matrices. see make_features.R for options and defaults. Please turn comma-separated arguments into lists (see batch_config.json)")
 batch_parser <- add_argument(batch_parser, "--config", help="config JSON file", type="character")
 batch_parser <- add_argument(batch_parser, "--name", help="batch name", type="character", default="batch")
+batch_parser <- add_argument(batch_parser, "--log", help="logfile", type="character", default="batch")
 # Layout of the json should be as follows:
 # {
 #  name : { optionName: Value, optionName2: Value2 },
@@ -20,19 +26,13 @@ batch_parser <- add_argument(batch_parser, "--name", help="batch name", type="ch
 # }
 # See ../batch_config.json for an example
 
-# For interactive_testing:
-#  Will setup the environment for the indicated name (logging to interactive.log)
-INTERACTIVE_TEST <- FALSE
 if (INTERACTIVE_TEST) {
-  interactive_name <- "human_kidney_test"
   config <- list(config="../batch_config.json", name="interactive")
 } else {
   config <- parse_args(batch_parser)
 }
 
-if (!(dir.exists("../logs")))
-  dir.create("../logs")
-logger <- simpleLogger(paste0(config$outputDir, "/logs/", config$name, ".log"),
+logger <- simpleLogger(paste0(config$log),
                        loglevel="TRACE",
                        printlevel="INFO")
 
@@ -82,8 +82,8 @@ if (INTERACTIVE_TEST) {
     logger$change_prefix(runName)
     logger$info(paste0("Starting generation of features for ", runName))
     tryCatch(
-      {do.call(make_features, fun_args_list[[runName]])},
-      error = function(cond) logger$error(paste0("FAILED: ", conditionMessage(cond)), terminate=FALSE)
+    {do.call(make_features, fun_args_list[[runName]])},
+    error = function(cond) logger$error(paste0("FAILED: ", conditionMessage(cond)), terminate=FALSE)
     )
 
   }

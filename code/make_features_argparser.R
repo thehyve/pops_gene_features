@@ -5,7 +5,7 @@ parser <- add_argument(parser, "--inputData", help="input data", type="character
 parser <- add_argument(parser, "--cores", help="number of cores", type="numeric", default = max(c(1, round(parallel::detectCores()/2))))
 parser <- add_argument(parser, "--numberPcs", help="number of PCs to include", type="character", default="elbow")
 parser <- add_argument(parser, "--varGenes", help="var genes", type="numeric", default=3000)
-parser <- add_argument(parser, "--clusRes", help="clus res", type="numeric", default=0.8)   # TODO: How to make clustree plot determine this?
+parser <- add_argument(parser, "--clusRes", help="clus res", type="numeric", default=0.8)
 parser <- add_argument(parser, "--inputAnnot", help="input annotation", type="character", default="none")
 parser <- add_argument(parser, "--rowAnnot", help="input row annotation file (used with colAnnot for MatrixMarket format files)", type="character", default="none")
 parser <- add_argument(parser, "--colAnnot", help="input column annotation file (used with rowAnnot for MatrixMarket format files)", type="character", default="none")
